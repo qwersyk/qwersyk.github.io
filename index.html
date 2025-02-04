@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shov - Telegram Bot Solutions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.5/lottie.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            color: var(--tg-theme-text-color, #686868);
+            background: var(--tg-theme-bg-color, #fcfcfc);
+            overflow-x: hidden;
+            overflow-y: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0H60V60H0V0Z' fill='rgba(var(--tg-theme-bg-color-rgb, 252, 252, 252), 0.04)'/%3E%3C/svg%3E");
+        }
+
+        .scroll-container {
+            overflow-y: hidden;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            touch-action: pan-y pinch-zoom;
+        }
+
+        section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background-color: var(--tg-theme-secondary-bg-color, #fff);
+            padding: 0 40px;
+            box-sizing: border-box;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s cubic-bezier(0.16, 0.84, 0.32, 1.12);
+        }
+
+        section.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .section-content {
+            max-width: 94%;
+            min-width: 320px;
+            position: relative;
+            padding: 40px;
+            box-sizing: border-box;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1.05s cubic-bezier(0.16, 0.84, 0.32, 1.12), transform 1.05s cubic-bezier(0.16, 0.84, 0.32, 1.12);
+        }
+
+        section.active .section-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+
+        h1, h2, p, img, .price-highlight {
+            text-shadow: 0 0.8px 1.6px rgba(0, 0, 0, 0.03);
+        }
+
+
+        h1, h2 {
+            font-weight: 700;
+            color: var(--tg-theme-text-color, #383838);
+            margin-bottom: 25px;
+            letter-spacing: -0.02em;
+            line-height: 1.05;
+        }
+
+        h1 {
+            font-size: 3.2em;
+        }
+
+        h2 {
+            font-size: 2.2em;
+        }
+
+        p {
+            font-size: 1.0em;
+            line-height: 1.6;
+            color: var(--tg-theme-hint-color, #6e6e6e);
+            max-width: 94%;
+            margin: 0 auto 30px;
+            font-weight: 400;
+        }
+
+        img {
+            max-width: 98%;
+            height: auto;
+            border-radius: 35px;
+            margin-top: 30px;
+            transition: box-shadow 0.3s ease-in-out, transform 0.2s ease-in-out;
+        }
+
+        img:hover {
+            transform: scale(1.01);
+            box-shadow: 0 9px 25px rgba(0, 0, 0, 0.05);
+        }
+
+
+        #intro {
+            background: linear-gradient(135deg, var(--tg-theme-secondary-bg-color, #f8f8f8) 20%, var(--tg-theme-bg-color, #fff) 80%); /* Градиент фона с цветами из темы или #f8f8f8 и #fff по умолчанию */
+        }
+
+        #intro h1 {
+            font-size: 3.8em;
+            color: var(--tg-theme-text-color, #444);
+            letter-spacing: -0.04em;
+        }
+
+        #intro p {
+            font-size: 1.2em;
+            color: var(--tg-theme-hint-color, #6e6e6e);
+            max-width: 96%;
+        }
+
+        .intro-text-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .intro-letter {
+            display: inline-block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+
+        section#features-section {
+            display: block;
+            padding: 0;
+            justify-content: initial;
+            align-items: initial;
+        }
+
+        section#features-section .section-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+            transform: none;
+            opacity: 1;
+        }
+
+        #features-carousel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .feature-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(100%);
+            transition: transform 0.6s cubic-bezier(0.16, 0.84, 0.32, 1.12),
+                        opacity 0.6s cubic-bezier(0.16, 0.84, 0.32, 1.12);
+        }
+
+        .feature-page.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0);
+        }
+
+        .feature-page.prev {
+            opacity: 0;
+            transform: translateX(-100%);
+        }
+
+
+        .feature-item-content {
+            max-width: 600px;
+            min-width: 300px;
+            width: 90%;
+            padding: 20px;
+            border-radius: 28px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.025);
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            margin: 25vh auto 0;
+            box-sizing: border-box;
+        }
+
+
+        .feature-page h2 {
+            font-size: 1.8em;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            color: var(--tg-theme-text-color, #444);
+            text-shadow: none;
+        }
+
+        .feature-page p {
+            font-size: 0.9em;
+            color: var(--tg-theme-hint-color, #747474);
+            text-shadow: none;
+            max-width: 94%;
+            margin: 10px auto;
+        }
+
+        .feature-page img {
+            margin-top: 10px;
+            margin-bottom: 15px;
+            max-width: 92%;
+            border-radius: 26px;
+            box-shadow: 0 3px 7px rgba(0,0,0,0.008);
+        }
+
+
+        #pricing {
+            background: linear-gradient(135deg, var(--tg-theme-bg-color, #fff) 20%, var(--tg-theme-secondary-bg-color, #f8f8f8) 80%); /* Градиент фона с цветами из темы или #fff и #f8f8f8 по умолчанию */
+        }
+
+        #pricing .pricing-content {
+            max-width: 96%;
+            min-width: 320px;
+        }
+
+        #pricing p {
+            font-size: 1.15em;
+            color: var(--tg-theme-hint-color, #6e6e6e);
+            margin-bottom: 40px;
+        }
+
+        .price-highlight {
+            color: var(--tg-theme-text-color, #3e3e3e);
+            font-weight: 700;
+            text-shadow: none;
+            font-size: 1.05em;
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 8px 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.005);
+        }
+
+
+        #projects {
+            background: var(--tg-theme-bg-color, #fff);
+            overflow: hidden;
+        }
+
+        #projects .section-content {
+            overflow: visible;
+            min-width: 320px;
+        }
+
+        #projects .projects-carousel {
+            display: flex;
+            overflow: visible;
+            scroll-snap-type: none;
+            -webkit-overflow-scrolling: touch;
+            padding-left: 40px;
+            padding-right: 40px;
+            box-sizing: border-box;
+            transform: translateX(0);
+            transition: transform 0.65s cubic-bezier(0.16, 0.84, 0.32, 1.12);
+            max-height: 60vh;
+            max-width: 60vh;
+        }
+
+        .project-slide {
+            flex: 0 0 auto;
+            width: 87%;
+            min-width: 87%;
+            height: auto;
+            margin-right: 60px;
+            padding: 40px;
+            background: var(--tg-theme-secondary-bg-color, #fdfdfd);
+            border-radius: 30px;
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.04);
+            text-align: left;
+            opacity: 1;
+            transition: opacity 0.55s cubic-bezier(0.16, 0.84, 0.32, 1.12);
+            box-sizing: border-box;
+            min-width: 300px;
+        }
+
+
+        .project-slide:last-child {
+            margin-right: 40px;
+        }
+
+        .project-slide img {
+            max-width: 100%;
+            margin-bottom: 35px;
+            border-radius: 28px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.005);
+        }
+
+        .project-slide h3 {
+            font-size: 1.8em;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--tg-theme-text-color, #444);
+            text-shadow: none;
+        }
+
+        .project-slide p {
+            font-size: 1.0em;
+            color: var(--tg-theme-hint-color, #747474);
+            text-shadow: none;
+            max-width: 100%;
+        }
+
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.0em;
+            }
+            h2 {
+                font-size: 1.7em;
+            }
+            p {
+                font-size: 0.9em;
+                line-height: 1.65;
+            }
+            #intro h1 {
+                font-size: 2.4em;
+            }
+            #intro p {
+                font-size: 1.0em;
+                max-width: 99%;
+            }
+            #features .features-grid {
+                gap: 35px;
+                margin-top: 35px;
+            }
+            .feature-item {
+                padding: 15px;
+            }
+            .project-slide {
+                width: 98%;
+                min-width: 98%;
+                margin-bottom: 30px;
+                padding: 20px;
+            }
+            .section-content {
+                max-width: 98%;
+                padding: 10px;
+            }
+
+            .project-slide {
+                padding: 24px;
+                margin-right: 12px;
+            }
+
+            .project-slide:last-child {
+                margin-right: 25px;
+            }
+
+            .feature-page h2 {
+                font-size: 1.6em;
+            }
+
+            .feature-page p {
+                font-size: 0.85em;
+            }
+
+            .feature-page img {
+                max-width: 93%;
+            }
+
+            .feature-item-content {
+                margin-top: 15vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+            p {
+                font-size: 0.85em;
+                line-height: 1.6;
+            }
+            #intro h1 {
+                font-size: 2.2em;
+            }
+            #intro p {
+                font-size: 0.95em;
+            }
+            .feature-item {
+                padding: 10px;
+            }
+            .project-slide {
+                width: 100%;
+                min-width: 100%;
+                padding: 15px;
+            }
+
+            .project-slide {
+                padding: 20px;
+                margin-right: 8px;
+            }
+
+            .project-slide:last-child {
+                margin-right: 25px;
+            }
+
+            .feature-page h2 {
+                font-size: 1.5em;
+            }
+
+            .feature-page p {
+                font-size: 0.8em;
+            }
+
+            .feature-page img {
+                max-width: 97%;
+            }
+        }
+        .scroll-indicator {
+            margin-top: 20px;
+            opacity: 0.5;
+            animation: bounce 2s infinite;
+            color: var(--tg-theme-hint-color, #6e6e6e);
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        * {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        *::-webkit-scrollbar {
+            display: none;
+        }
+
+        html, body {
+            overflow: hidden;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .scroll-container {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            overflow: hidden;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .projects-carousel {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            overflow: hidden;
+        }
+
+        .projects-carousel::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="scroll-container" id="scrollContainer">
+    <section id="intro" class="section active">
+        <div class="section-content">
+            <h1 id="intro-title">Welcome to <span style="color: #7289da;">Shov</span></h1>
+            <p id="intro-paragraph">We create custom Telegram bots for businesses.</p>
+            <div class="scroll-indicator">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        </div>
+    </section>
+
+    <section id="features-section" class="section">
+        <div class="section-content">
+            <div id="features-carousel" class="features-carousel">
+                <div class="feature-page active" id="feature-page-1" >
+                    <div class="feature-item-content">
+                        <div class="welcome-icon" id="telegram-animoji-mini-app" style="margin: 0 auto; max-height: 40vh;max-width: 40vh;"></div>
+                        <script>
+                            lottie.loadAnimation({
+                                container: document.getElementById('telegram-animoji-mini-app'),
+                                path: 'https://raw.githubusercontent.com/qwersyk/qwersyk.github.io/refs/heads/main/1.json',
+                                renderer: 'svg',
+                                loop: true,
+                                autoplay: true,
+                            });
+                        </script>
+                        <h2>Telegram Mini Apps</h2>
+                        <p>Enhance user experience with interactive mini-apps. Deliver rich content, services, and experiences directly within Telegram.</p>
+                    </div>
+                </div>
+                <div class="feature-page" id="feature-page-2">
+                    <div class="feature-item-content">
+                        <div class="welcome-icon" id="telegram-animoji-admin-panel" style="margin: 0 auto; max-height: 40vh;max-width: 40vh;"></div>
+                        <script>
+                            lottie.loadAnimation({
+                                container: document.getElementById('telegram-animoji-admin-panel'),
+                                path: 'https://raw.githubusercontent.com/qwersyk/qwersyk.github.io/refs/heads/main/2.json',
+                                renderer: 'svg',
+                                loop: true,
+                                autoplay: true,
+                            });
+                        </script>
+                        <h2>Custom Admin Panels</h2>
+                        <p>Manage your bot with ease using custom admin panels. Monitor performance, analyze data, and make informed decisions with powerful tools.</p>
+                    </div>
+                </div>
+                <div class="feature-page" id="feature-page-3">
+                    <div class="feature-item-content">
+                        <div class="welcome-icon" id="telegram-animoji-recommendations" style="margin: 0 auto; max-height: 40vh;max-width: 40vh;"></div>
+                        <script>
+                            lottie.loadAnimation({
+                                container: document.getElementById('telegram-animoji-recommendations'),
+                                path: 'https://raw.githubusercontent.com/qwersyk/qwersyk.github.io/refs/heads/main/3.json',
+                                renderer: 'svg',
+                                loop: true,
+                                autoplay: true,
+                            });
+                        </script>
+                        <h2>Intelligent Recommendations</h2>
+                        <p>Deliver personalized content and recommendations with AI-powered algorithms. Enhance user engagement and satisfaction with tailored experiences.</p>
+                    </div>
+                </div>
+                <div class="feature-page" id="feature-page-4">
+                    <div class="feature-item-content">
+                        <div class="welcome-icon" id="telegram-animoji-referral" style="margin: 0 auto; max-height: 40vh;max-width: 40vh;"></div>
+                        <script>
+                            lottie.loadAnimation({
+                                container: document.getElementById('telegram-animoji-referral'),
+                                path: 'https://raw.githubusercontent.com/qwersyk/qwersyk.github.io/refs/heads/main/4.json',
+                                renderer: 'svg',
+                                loop: true,
+                                autoplay: true,
+                            });
+                        </script>
+                        <h2>Referral Growth Programs</h2>
+                        <p>Boost user acquisition and retention with referral programs. Incentivize users to share your bot and drive organic growth.</p>
+                    </div>
+                </div>
+                <div class="feature-page" id="feature-page-5">
+                    <div class="feature-item-content">
+                        <div class="welcome-icon" id="telegram-animoji-integrations" style="margin: 0 auto; max-height: 40vh;max-width: 40vh;"></div>
+                        <script>
+                            lottie.loadAnimation({
+                                container: document.getElementById('telegram-animoji-integrations'),
+                                path: 'https://raw.githubusercontent.com/qwersyk/qwersyk.github.io/refs/heads/main/5.json',
+                                renderer: 'svg',
+                                loop: true,
+                                autoplay: true,
+                            });
+                        </script>
+                        <h2>Integrations & Data Handling</h2>
+                        <p>Connect your bot ecosystem with APIs, CRM, and databases. Automate workflows and unlock enhanced bot capabilities through seamless integration.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="section">
+        <div class="section-content pricing-content">
+            <h2>Transparent Pricing & Exclusive Trial</h2>
+            <p>Solutions tailored to fit your budget, starting from a highly competitive <span class="price-highlight">€150</span>. Project pricing is transparent, often more economical than you expect!</p>
+            <p>Kickstart your project with <span class="price-highlight">a complimentary 3-month server hosting trial</span>. Experience robust performance and unwavering reliability at zero initial cost.</p>
+        </div>
+    </section>
+
+    <section id="projects" class="section">
+        <div class="section-content">
+            <h2>Project Highlights & Case Studies</h2>
+            <div class="projects-carousel" id="projectsCarousel">
+                <div class="project-slide">
+                    <div class="welcome-icon" id="telegram-animoji-keter" style="margin: 0 auto; max-height: 40vh;max-width: 40vh;"></div>
+                    <script>
+                        lottie.loadAnimation({
+                            container: document.getElementById('telegram-animoji-keter'),
+                            path: 'https://raw.githubusercontent.com/qwersyk/qwersyk.github.io/refs/heads/main/6.json',
+                            renderer: 'svg',
+                            loop: true,
+                            autoplay: true,
+                        });
+
+                    </script>
+                    <h3>Keter</h3>
+                    <p>real estate agent</p>
+                </div>
+                <div class="project-slide">
+
+                    <div id="cube-container">
+                        <div class="scene-cube">
+                            <div class="cube" id="cube">
+                                <div class="face front"></div>
+                                <div class="face back"></div>
+                                <div class="face right"></div>
+                                <div class="face left"></div>
+                                <div class="face top"></div>
+                                <div class="face bottom"></div>
+                            </div>
+                        </div>
+
+                        <style>
+                            #cube-container {
+                                width: 100%;
+                                aspect-ratio: 1;
+                                max-height: 100%;
+                                position: relative;
+                                background: var(--tg-theme-secondary-bg-color, #fdfdfd);
+                                overflow: hidden;
+                            }
+
+                            .scene-cube {
+                                width: 100%;
+                                height: 100%;
+                                perspective: 1000px;
+                                position: absolute;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            }
+
+                            .cube {
+                                width: min(50px, 50%);
+                                height: min(50px, 50%);
+                                position: relative;
+                                transform-style: preserve-3d;
+                                transition: transform 0.1s;
+                            }
+
+                            .face {
+                                position: absolute;
+                                width: 100%;
+                                height: 100%;
+                                border: 2px solid var(--tg-theme-hint-color, rgba(0,0,0,0.2));
+                                backface-visibility: hidden;
+                            }
+
+                            .front  {
+                                transform: translateZ(calc(min(50px, 50vw) / 2));
+                                background: var(--tg-theme-button-color, #2481cc80);
+                            }
+                            .back   {
+                                transform: rotateY(180deg) translateZ(calc(min(50px, 50vw) / 2));
+                                background: var(--tg-theme-secondary-bg-color, #f1f1f140);
+                            }
+                            .right  {
+                                transform: rotateY(90deg) translateZ(calc(min(50px, 50vw) / 2));
+                                background: var(--tg-theme-button-color, #2481cc60);
+                            }
+                            .left   {
+                                transform: rotateY(-90deg) translateZ(calc(min(50px, 50vw) / 2));
+                                background: var(--tg-theme-secondary-bg-color, #f1f1f140);
+                            }
+                            .top    {
+                                transform: rotateX(90deg) translateZ(calc(min(50px, 50vw) / 2));
+                                background: var(--tg-theme-button-color, #2481cc40);
+                            }
+                            .bottom {
+                                transform: rotateX(-90deg) translateZ(calc(min(50px, 50vw) / 2));
+                                background: var(--tg-theme-secondary-bg-color, #f1f1f140);
+                            }
+                        </style>
+
+                        <script>
+                            (function() {
+                                const cube = document.getElementById('cube');
+                                const tg = window.Telegram.WebApp;
+                                const deviceOrientation = tg.DeviceOrientation;
+
+                                function updateRotation() {
+                                    const alpha = deviceOrientation.alpha || 0;
+                                    const beta = deviceOrientation.beta || 0;
+                                    const gamma = deviceOrientation.gamma || 0;
+
+                                    cube.style.transform = `
+                                        rotateZ(${alpha}deg)
+                                        rotateX(${beta * 50}deg)
+                                        rotateY(${gamma * 50}deg)
+                                    `;
+                                }
+
+                                deviceOrientation.start({ refresh_rate: 20, need_absolute: true });
+                                setInterval(updateRotation, 20);
+                            })();
+                        </script>
+                    </div>
+
+                    <h3>3D Cube</h3>
+                    <p>interactive 3D cube</p>
+                </div>
+                <div class="project-slide">
+                    <div class="welcome-icon" id="telegram-animoji-simple-linear-bot" style="margin: 0 auto; max-height: 40vh;max-width: 40vh;"></div>
+                    <script>
+                        lottie.loadAnimation({
+                            container: document.getElementById('telegram-animoji-simple-linear-bot'),
+                            path: 'https://raw.githubusercontent.com/qwersyk/qwersyk.github.io/refs/heads/main/7.json',
+                            renderer: 'svg',
+                            loop: true,
+                            autoplay: true
+                        });
+                    </script>
+
+                    <h3>Simple Linear Bot</h3>
+                    <p>Bot with inline buttons and preset buttons.</p>
+                </div>
+                <div class="project-slide">
+                    <div class="welcome-icon" id="telegram-animoji-write-to-us" style="margin: 0 auto; max-height: 40vh;max-width: 40vh;"></div>
+                    <script>
+                        lottie.loadAnimation({
+                            container: document.getElementById('telegram-animoji-write-to-us'),
+                            path: 'https://raw.githubusercontent.com/qwersyk/qwersyk.github.io/refs/heads/main/8.json',
+                            renderer: 'svg',
+                            loop: true,
+                            autoplay: true,
+                        });
+                    </script>
+                    <h3>Write to us</h3>
+                    <p>Write to us to find out more</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+    <script>
+       const sections = document.querySelectorAll('.section');
+        const featurePages = document.querySelectorAll('.feature-page');
+        const sectionContents = document.querySelectorAll('.section-content');
+        let currentSectionIndex = 0;
+        let currentFeatureIndex = 0;
+        let isScrolling = false;
+        let projectCarousel = document.getElementById('projectsCarousel');
+        let projectSlides = document.querySelectorAll('.project-slide');
+        let slideWidth = projectSlides[0].offsetWidth + 60;
+        let carouselScrollPos = 0;
+        let scrollSensitivity = 0.05;
+        const scrollContainer = document.getElementById('scrollContainer');
+
+        let touchStartY = null;
+        const tg = window.Telegram.WebApp;
+
+        tg.ready();
+        tg.expand();
+        try {
+            Telegram.WebApp.requestFullscreen();
+        }catch (e) {
+            console.log('Fullscreen request failed');
+        }
+
+        window.Telegram.WebApp.disableVerticalSwipes();
+        tg.MainButton.hasShineEffect = true;
+
+        tg.BackButton.hide();
+
+        tg.BackButton.onClick(() => {
+            updateActiveSection(0);
+            resetFeatureCarousel();
+            carouselScrollPos = 0;
+            if (projectCarousel) {
+                projectCarousel.style.transform = `translateX(0)`;
+                updateCarouselSlidesOpacity();
+            }
+            tg.BackButton.hide();
+        });
+
+
+
+
+        let lastMainButtonParams = null;
+
+
+        function updateMainButton(sectionIndex, featureOrProjectIndex = 0) {
+            let newParams = null;
+            let onClickHandler = null;
+
+            switch(sectionIndex) {
+                case 0:
+                    tg.MainButton.hide();
+                    vibrateLight();
+                    return;
+
+                case 1:
+                    vibrateLight();
+                    newParams = {
+                        text: 'Contact Manager',
+                        color: '#7289da',
+                        text_color: '#ffffff'
+                    };
+                    onClickHandler = () => {
+                        tg.openTelegramLink('https://t.me/jjsnot');
+                    };
+                    break;
+
+                case 2:
+                    vibrateLight();
+                    newParams = {
+                        text: 'Order Custom Bot',
+                        color: '#7289da',
+                        text_color: '#ffffff'
+                    };
+                    onClickHandler = () => {
+                        tg.openTelegramLink('https://t.me/jjsnot');
+                    };
+                    break;
+
+                case 3:
+                    const projectButtons = [
+                        { text: 'Try Keter', link: 'https://t.me/KeterFilterBot' },
+                        { text: 'About Gyroscope', link: 'https://core.telegram.org/bots/webapps#gyroscope' },
+                        { text: 'Contact Manager', link: 'https://t.me/jjsnot' },
+                        { text: 'Write to us', link: 'https://t.me/jjsnot' }
+                    ];
+                    const visibleProjectIndex = Math.round(carouselScrollPos / slideWidth);
+
+                    if (visibleProjectIndex >= 0 && visibleProjectIndex < projectButtons.length) {
+                        const currentProject = projectButtons[visibleProjectIndex];
+                        newParams = {
+                            text: currentProject.text,
+                            color: '#7289da',
+                            text_color: '#ffffff'
+                        };
+                        onClickHandler = () => {
+                            tg.openTelegramLink(currentProject.link);
+                        };
+                    } else {
+                        tg.MainButton.hide();
+                        return;
+                    }
+                    break;
+
+                default:
+                    tg.MainButton.hide();
+                    return;
+            }
+
+
+            if (!paramsEqual(lastMainButtonParams, newParams)) {
+                tg.MainButton.setParams(newParams);
+                tg.MainButton.offClick(lastMainButtonParams?.onClick);
+                tg.MainButton.onClick(onClickHandler);
+                tg.MainButton.show();
+                lastMainButtonParams = { ...newParams, onClick: onClickHandler };
+            } else if (newParams && !tg.MainButton.isVisible) {
+                tg.MainButton.show();
+            } else if (!newParams) {
+                tg.MainButton.hide();
+            }
+        }
+
+
+        function paramsEqual(params1, params2) {
+            if (!params1 || !params2) return params1 === params2;
+            return params1.text === params2.text &&
+                   params1.color === params2.color &&
+                   params1.text_color === params2.text_color;
+        }
+
+
+        function updateActiveSection(newSectionIndex) {
+            if (newSectionIndex !== currentSectionIndex && newSectionIndex >= 0 && newSectionIndex < sections.length) {
+                sections.forEach(section => {
+                    const content = section.querySelector('.section-content');
+                    if (content) {
+                        content.style.transition = 'opacity 0.9s cubic-bezier(0.15, 0.85, 0.35, 1.2), transform 0.9s cubic-bezier(0.15, 0.85, 0.35, 1.2)';
+                    }
+                });
+                sections[currentSectionIndex].classList.remove('active');
+                sections[newSectionIndex].classList.add('active');
+                currentSectionIndex = newSectionIndex;
+
+                if (newSectionIndex === 0) {
+                    currentFeatureIndex = 0;
+                    featurePages.forEach(page => {
+                        page.classList.remove('active', 'prev');
+                        page.style.opacity = '0';
+                        page.style.transform = 'translateX(100%)';
+                        page.style.pointerEvents = 'none';
+                    });
+                    featurePages[0].classList.add('active');
+                    featurePages[0].style.opacity = '1';
+                    featurePages[0].style.transform = 'translateX(0)';
+                    featurePages[0].style.pointerEvents = 'auto';
+                }
+
+                resetFeatureCarousel();
+                updateMainButton(newSectionIndex);
+
+                if (newSectionIndex === 0) {
+                    tg.BackButton.hide();
+                } else {
+                    tg.BackButton.show();
+                }
+            }
+        }
+
+        function updateActiveFeaturePage(newFeatureIndex) {
+            if (newFeatureIndex !== currentFeatureIndex && newFeatureIndex >= 0 && newFeatureIndex < featurePages.length) {
+                featurePages.forEach(page => {
+                    page.classList.remove('active', 'prev');
+                    page.style.opacity = '0';
+                    page.style.transform = 'translateX(100%)';
+                    page.style.pointerEvents = 'none';
+                });
+
+                const isForward = newFeatureIndex > currentFeatureIndex;
+
+                if (currentFeatureIndex >= 0) {
+                    const currentPage = featurePages[currentFeatureIndex];
+                    currentPage.style.transform = isForward ? 'translateX(-100%)' : 'translateX(100%)';
+                    currentPage.style.opacity = '0';
+                }
+
+                const newPage = featurePages[newFeatureIndex];
+                newPage.style.transform = isForward ? 'translateX(100%)' : 'translateX(-100%)';
+
+                setTimeout(() => {
+                    newPage.classList.add('active');
+                    newPage.style.transform = 'translateX(0)';
+                    newPage.style.opacity = '1';
+                    newPage.style.pointerEvents = 'auto';
+                }, 50);
+
+                currentFeatureIndex = newFeatureIndex;
+                updateMainButton(currentSectionIndex, newFeatureIndex);
+            }
+        }
+
+
+        function handleWheelScroll(event) {
+            if (isScrolling) return;
+            isScrolling = true;
+
+            let targetSectionIndex = currentSectionIndex;
+            let targetFeatureIndex = currentFeatureIndex;
+            let currentScrollSensitivity = scrollSensitivity;
+
+            if (currentSectionIndex === 3) {
+                currentScrollSensitivity = scrollSensitivity * 20;
+            }
+
+
+
+            if (event.deltaY > 0) {
+                if (currentSectionIndex === 1) {
+                    if (currentFeatureIndex < featurePages.length - 1 && !isFeatureScrolling) {
+                        targetFeatureIndex++;
+                        isFeatureScrolling = true;
+                    } else if (!isFeatureScrolling) {
+                        targetSectionIndex++;
+                    }
+                }
+                else if (currentSectionIndex < sections.length - 1) {
+                    targetSectionIndex++;
+                }
+                 else if (currentSectionIndex === sections.length - 1 && currentSectionIndex === 3) {
+                    let scrollAmount = event.deltaY * currentScrollSensitivity;
+                    carouselScrollPos += scrollAmount;
+
+                    if (carouselScrollPos < 0) carouselScrollPos = 0;
+                    if (carouselScrollPos > (projectSlides.length - 1) * slideWidth) carouselScrollPos = (projectSlides.length - 1) * slideWidth;
+
+                    projectCarousel.style.transform = `translateX(-${carouselScrollPos}px)`;
+                    updateCarouselSlidesOpacity();
+                    updateMainButton(currentSectionIndex);
+                    isScrolling = false;
+                    event.preventDefault();
+                    return;
+                }
+            } else {
+                if (currentSectionIndex === 1) {
+                     if (currentFeatureIndex > 0 && !isFeatureScrolling) {
+                        targetFeatureIndex--;
+                        isFeatureScrolling = true;
+                    } else if (!isFeatureScrolling) {
+                        targetSectionIndex--;
+                    }
+                } else if (currentSectionIndex > 0 && currentSectionIndex !== 3) {
+                    targetSectionIndex--;
+                }
+                else if (currentSectionIndex === 3) {
+                    if (carouselScrollPos > 0) {
+                        let scrollAmount = event.deltaY * currentScrollSensitivity;
+                        carouselScrollPos += scrollAmount;
+                        if (carouselScrollPos < 0) carouselScrollPos = 0;
+
+                        projectCarousel.style.transform = `translateX(-${carouselScrollPos}px)`;
+                        updateCarouselSlidesOpacity();
+                        updateMainButton(currentSectionIndex);
+                        isScrolling = false;
+                        event.preventDefault();
+                        return;
+                    } else {
+                        targetSectionIndex--;
+                    }
+                }
+            }
+
+
+            if (targetSectionIndex !== currentSectionIndex) {
+                sections.forEach(section => {
+                    const content = section.querySelector('.section-content');
+                    if (content) {
+                        content.style.transition = 'none';
+                    }
+                });
+                updateActiveSection(targetSectionIndex);
+                isFeatureScrolling = false;
+            }
+
+            if (targetFeatureIndex !== currentFeatureIndex && currentSectionIndex === 1) {
+                updateActiveFeaturePage(targetFeatureIndex);
+                isFeatureScrolling = false;
+            }
+
+
+            setTimeout(() => {
+                isScrolling = false;
+            }, 500);
+
+            event.preventDefault();
+        }
+
+        function handleTouchStart(event) {
+            touchStartY = event.touches[0].clientY;
+        }
+
+        function handleTouchMove(event) {
+            if (touchStartY === null || isScrolling) return;
+
+            const touchCurrentY = event.touches[0].clientY;
+            const touchDeltaY = touchStartY - touchCurrentY;
+            touchStartY = touchCurrentY;
+
+             let currentScrollSensitivity = scrollSensitivity;
+
+            if (currentSectionIndex === 3) {
+                currentScrollSensitivity = scrollSensitivity * 20;
+            }
+
+            const simulatedWheelEvent = {
+                deltaY: touchDeltaY * 2 * currentScrollSensitivity,
+                preventDefault: () => event.preventDefault()
+            };
+            handleWheelScroll(simulatedWheelEvent);
+
+            event.preventDefault();
+        }
+
+
+        function handleTouchEnd() {
+            touchStartY = null;
+        }
+
+        function vibrateLight() {
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+
+        function updateCarouselSlidesOpacity() {
+            projectSlides.forEach((slide, index) => {
+                let slideOffset = index * slideWidth - carouselScrollPos;
+                let opacityFactor = 1 - Math.abs(slideOffset) / (window.innerWidth * 0.7);
+                let opacity = Math.max(0.15, opacityFactor);
+                slide.style.opacity = opacity;
+            });
+        }
+
+        function resetFeatureCarousel() {
+            currentFeatureIndex = 0;
+            featurePages.forEach((page, index) => {
+                page.classList.remove('active', 'prev');
+                page.style.opacity = index === 0 ? '1' : '0';
+                page.style.transform = index === 0 ? 'translateX(0)' : 'translateX(100%)';
+                page.style.pointerEvents = index === 0 ? 'auto' : 'none';
+            });
+            featurePages[0].classList.add('active');
+        }
+
+
+        sections[currentSectionIndex].classList.add('active');
+        featurePages[currentFeatureIndex].classList.add('active');
+        window.addEventListener('wheel', handleWheelScroll, { passive: false });
+        window.addEventListener('scroll', updateCarouselSlidesOpacity);
+        updateCarouselSlidesOpacity();
+
+        scrollContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+        scrollContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+        scrollContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+        projectCarousel.addEventListener('transitionend', () => {
+            if (currentSectionIndex === 3) {
+                updateMainButton(3);
+            }
+        });
+
+        updateMainButton(currentSectionIndex);
+    </script>
+
+</body>
+</html>
